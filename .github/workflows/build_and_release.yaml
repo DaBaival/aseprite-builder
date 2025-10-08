@@ -52,7 +52,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
         matrix:
-          os: [ windows-latest, ubuntu-latest, macOS-latest ]
+        # os: [ windows-latest, ubuntu-latest, macOS-latest ]
+          os: [ windows-latest ]
         fail-fast: false
     steps:
       - name: Install Dependencies
@@ -69,6 +70,17 @@ jobs:
         shell: bash
         run: |
           git clone --recurse-submodules -j8 https://github.com/aseprite/aseprite --branch ${{ needs.create-release.outputs.release-tag }}
+      - name: Update Version Info
+        shell: bash
+        working-directory: aseprite
+        run: |
+          VERSION="${{ needs.create-release.outputs.release-tag }}"
+          CLEAN_VERSION="${VERSION#v}"
+          python -c "
+          v = open('src/ver/CMakeLists.txt').read()
+          open('src/ver/CMakeLists.txt', 'w').write(v.replace('1.x-dev', '$CLEAN_VERSION'))
+          "
+          echo "Updated version from '1.x-dev' to '$CLEAN_VERSION'"
       - name: Install Skia
         working-directory: aseprite
         shell: bash
